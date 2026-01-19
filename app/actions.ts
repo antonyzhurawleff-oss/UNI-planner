@@ -54,7 +54,20 @@ export async function submitForm(formData: FormData) {
       createdAt: new Date().toISOString(),
     };
 
-    await saveSubmission(submission);
+    console.log(`submitForm: Saving submission with ID: ${submission.id}`);
+    try {
+      await saveSubmission(submission);
+      console.log(`submitForm: Successfully saved submission ID: ${submission.id}`);
+    } catch (saveError: any) {
+      console.error(`submitForm: Error saving submission ID ${submission.id}:`, saveError);
+      console.error("Save error details:", {
+        message: saveError?.message,
+        code: saveError?.code,
+        stack: saveError?.stack,
+      });
+      // Don't fail the entire request if save fails - still return the ID
+      // The user should still be able to see results even if save failed
+    }
 
     // Return submission ID for client-side redirect
     // Using redirect() here doesn't work when called from client handler
