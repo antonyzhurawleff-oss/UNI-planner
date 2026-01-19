@@ -95,11 +95,15 @@ export async function searchUniversityImage(
   }
 
   // Try multiple search queries to find the best image
+  // Order matters - more specific queries first
   const queries = [
-    `${university} ${country} campus building exterior`,
-    `${university} ${country} university campus`,
-    `${university} ${country} main building`,
-    `${university} campus`,
+    `${university} ${country} campus building exterior architecture`,
+    `${university} ${country} university campus main building`,
+    `${university} ${country} campus aerial view`,
+    `${university} ${country} university building`,
+    `${university} ${country} campus`,
+    `${university} campus ${country}`,
+    `${university} ${country}`,
   ];
 
   for (const query of queries) {

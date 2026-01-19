@@ -160,16 +160,19 @@ Return ONLY valid JSON, no markdown, no emojis, no additional text.`;
       // Apply enrichment from knowledge base - this will add real data
       const enriched = enrichProgramWithUniversityData(program);
       
-      // Search for university image using SerpAPI if not already present
-      if (!enriched.imageUrl) {
-        try {
-          const imageUrl = await searchUniversityImage(enriched.university, enriched.country);
-          if (imageUrl) {
-            enriched.imageUrl = imageUrl;
-          }
-        } catch (error) {
-          console.warn(`Failed to search image for ${enriched.university}:`, error);
+      // Always search for university image using SerpAPI to ensure we have the best image
+      try {
+        console.log(`Searching for image for ${enriched.university} in ${enriched.country}`);
+        const imageUrl = await searchUniversityImage(enriched.university, enriched.country);
+        if (imageUrl) {
+          enriched.imageUrl = imageUrl;
+          console.log(`Successfully found image for ${enriched.university}: ${imageUrl}`);
+        } else {
+          console.warn(`No image found for ${enriched.university} in ${enriched.country}`);
         }
+      } catch (error) {
+        console.error(`Failed to search image for ${enriched.university}:`, error);
+        // Continue without image if search fails
       }
       
       // Return enriched program with all fields

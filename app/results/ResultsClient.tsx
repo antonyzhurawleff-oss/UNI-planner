@@ -100,7 +100,9 @@ export default function ResultsClient({ submission }: ResultsClientProps) {
 
   // Helper function to get university image URL from internet
   const getUniversityImageUrl = (university: string, country: string, existingUrl?: string): string => {
+    // Always prefer the imageUrl from SerpAPI if available
     if (existingUrl && existingUrl.startsWith('http')) {
+      console.log(`Using SerpAPI image for ${university}: ${existingUrl}`);
       return existingUrl;
     }
     
@@ -562,37 +564,46 @@ export default function ResultsClient({ submission }: ResultsClientProps) {
             </div>
 
              <div className="p-6 space-y-6">
-               {/* University Image */}
-               <div className="relative w-full h-64 rounded-lg overflow-hidden shadow-lg bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500">
-                 <img
-                   src={getUniversityImageUrl(selectedProgram.university, selectedProgram.country, selectedProgram.imageUrl)}
-                   alt={selectedProgram.university}
-                   className="w-full h-full object-cover relative z-10"
-                   loading="eager"
-                   onError={(e) => {
-                     const target = e.target as HTMLImageElement;
-                     target.style.display = 'none';
-                     // Show fallback when image fails
-                     const fallback = target.nextElementSibling as HTMLElement;
-                     if (fallback) {
-                       fallback.style.display = 'flex';
-                     }
-                   }}
-                   onLoad={(e) => {
-                     // Hide fallback when image loads successfully
-                     const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
-                     if (fallback) {
-                       fallback.style.display = 'none';
-                     }
-                   }}
-                 />
-                 {/* Fallback gradient - shown only if image fails */}
-                 <div 
-                   className="w-full h-full flex items-center justify-center text-white text-5xl font-bold absolute inset-0 z-0"
-                 >
-                   {selectedProgram.university.charAt(0).toUpperCase()}
+               {/* University Image - Always show if available from SerpAPI */}
+               {selectedProgram.imageUrl ? (
+                 <div className="relative w-full h-64 rounded-lg overflow-hidden shadow-lg bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500">
+                   <img
+                     src={selectedProgram.imageUrl}
+                     alt={`${selectedProgram.university} campus`}
+                     className="w-full h-full object-cover relative z-10"
+                     loading="eager"
+                     onError={(e) => {
+                       const target = e.target as HTMLImageElement;
+                       target.style.display = 'none';
+                       // Show fallback when image fails
+                       const fallback = target.nextElementSibling as HTMLElement;
+                       if (fallback) {
+                         fallback.style.display = 'flex';
+                       }
+                     }}
+                     onLoad={(e) => {
+                       // Hide fallback when image loads successfully
+                       const fallback = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
+                       if (fallback) {
+                         fallback.style.display = 'none';
+                       }
+                     }}
+                   />
+                   {/* Fallback gradient - shown only if image fails */}
+                   <div 
+                     className="w-full h-full flex items-center justify-center text-white text-5xl font-bold absolute inset-0 z-0"
+                     style={{ display: 'none' }}
+                   >
+                     {selectedProgram.university.charAt(0).toUpperCase()}
+                   </div>
                  </div>
-               </div>
+               ) : (
+                 <div className="relative w-full h-64 rounded-lg overflow-hidden shadow-lg bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500">
+                   <div className="w-full h-full flex items-center justify-center text-white text-5xl font-bold">
+                     {selectedProgram.university.charAt(0).toUpperCase()}
+                   </div>
+                 </div>
+               )}
 
               <div>
                 <h3 className="text-3xl font-bold text-gray-900 mb-2">{selectedProgram.name}</h3>
