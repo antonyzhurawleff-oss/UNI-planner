@@ -1,8 +1,10 @@
 import { getSubmissions } from "@/lib/storage";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default function AdminPage() {
-  const submissions = getSubmissions();
+  const submissions = getSubmissions() || [];
 
   return (
     <div className="min-h-screen py-12 px-4 bg-gray-50">
@@ -71,7 +73,7 @@ export default function AdminPage() {
                         {submission.input.budget}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
-                        {submission.response.universities.length} universities
+                        {submission.response.programs?.length || submission.response.universities?.length || 0} programs
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(submission.createdAt).toLocaleDateString()}

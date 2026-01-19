@@ -7,5 +7,10 @@ module.exports = {
     ignoreDuringBuilds: true,
   },
   output: "standalone",
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
 };
   
