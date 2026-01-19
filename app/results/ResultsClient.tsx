@@ -50,6 +50,14 @@ export default function ResultsClient({ submission }: ResultsClientProps) {
   const [programPlan, setProgramPlan] = useState<AdmissionPlan | null>(null); // Plan for selected program
   const [isGeneratingPlan, setIsGeneratingPlan] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState<{
+    grades?: string;
+    languageExam?: string;
+    examScore?: string;
+    budget?: string;
+    sortBy?: "deadline" | "country" | "category" | "name";
+  }>({});
   const { t } = useLanguage();
 
   // Group programs by country, then by status within each country
@@ -340,14 +348,32 @@ export default function ResultsClient({ submission }: ResultsClientProps) {
           </p>
         </div>
 
+        {/* Filters Button */}
+        <div className="mb-4 flex justify-end">
+          <button
+            onClick={() => setIsFiltersOpen(true)}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg"
+          >
+            <span>🔍</span>
+            Filters
+          </button>
+        </div>
+
         {/* Group by Country, then by Status */}
         <section className="bg-white rounded-2xl shadow-xl p-8 md:p-10 mb-8 border border-gray-100">
-          <h2 className="text-3xl font-bold mb-6 text-gray-800">Recommended Programs</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-3xl font-bold text-gray-800">Recommended Programs</h2>
+            {Object.keys(filters).some(key => filters[key as keyof typeof filters]) && (
+              <span className="text-sm text-gray-600">
+                {filteredAndSortedPrograms.length} program{filteredAndSortedPrograms.length !== 1 ? 's' : ''} found
+              </span>
+            )}
+          </div>
           
-          {!programs || programs.length === 0 ? (
+          {!filteredAndSortedPrograms || filteredAndSortedPrograms.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-600 text-lg mb-4">No programs found in your submission.</p>
-              <p className="text-gray-500 text-sm">Please check your submission data or create a new plan.</p>
+              <p className="text-gray-600 text-lg mb-4">No programs found matching your filters.</p>
+              <p className="text-gray-500 text-sm">Try adjusting your filters or create a new plan.</p>
             </div>
           ) : Object.keys(programsByCountryAndStatus).length === 0 ? (
             <div className="text-center py-12">
@@ -366,9 +392,9 @@ export default function ResultsClient({ submission }: ResultsClientProps) {
                   {statusGroups.canApply.length > 0 && (
                     <div className="mb-8">
                       <div className="space-y-4">
-                        {statusGroups.canApply.map((program) => {
-                          const originalIndex = programs.findIndex((p) => p === program);
-                          return renderProgramCard(program, originalIndex);
+                        {statusGroups.canApply.map((program, idx) => {
+                          const originalIndex = filteredAndSortedPrograms.findIndex((p) => p === program);
+                          return <div key={`${program.university}-${program.name}-${idx}`}>{renderProgramCard(program, originalIndex >= 0 ? originalIndex : idx)}</div>;
                         })}
                       </div>
                     </div>
@@ -383,11 +409,11 @@ export default function ResultsClient({ submission }: ResultsClientProps) {
                     </h4>
                     <p className="text-gray-600 mb-4 text-sm">These programs require better grades/scores</p>
                     <div className="space-y-4">
-                      {statusGroups.needImprovement.map((program) => {
-                        const originalIndex = programs.findIndex((p) => p === program);
+                      {statusGroups.needImprovement.map((program, idx) => {
+                        const originalIndex = filteredAndSortedPrograms.findIndex((p) => p === program);
                         return (
-                          <div key={originalIndex}>
-                            {renderProgramCard(program, originalIndex)}
+                          <div key={`${program.university}-${program.name}-need-${idx}`}>
+                            {renderProgramCard(program, originalIndex >= 0 ? originalIndex : idx)}
                             {program.requiredImprovements && (
                               <div className="mt-3 p-4 bg-orange-50 border-l-4 border-orange-400 rounded">
                                 <p className="text-sm font-medium text-orange-800">
@@ -941,6 +967,140 @@ export default function ResultsClient({ submission }: ResultsClientProps) {
                   )}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Filters Modal */}
+      {isFiltersOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-800">Filters</h2>
+              <button
+                onClick={() => setIsFiltersOpen(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Grades */}
+              <div>
+                <label htmlFor="filter-grades" className="block text-sm font-semibold text-gray-800 mb-2">
+                  Grades / GPA
+                </label>
+                <input
+                  type="text"
+                  id="filter-grades"
+                  value={filters.grades || ""}
+                  onChange={(e) => setFilters({ ...filters, grades: e.target.value })}
+                  placeholder="e.g., 3.5, A, 85%"
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Language Exam */}
+              <div>
+                <label htmlFor="filter-languageExam" className="block text-sm font-semibold text-gray-800 mb-2">
+                  Language Exam
+                </label>
+                <select
+                  id="filter-languageExam"
+                  value={filters.languageExam || ""}
+                  onChange={(e) => setFilters({ ...filters, languageExam: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">All</option>
+                  <option value="IELTS">IELTS</option>
+                  <option value="TOEFL">TOEFL</option>
+                  <option value="None">None</option>
+                </select>
+              </div>
+
+              {/* Exam Score */}
+              <div>
+                <label htmlFor="filter-examScore" className="block text-sm font-semibold text-gray-800 mb-2">
+                  Exam Score
+                </label>
+                <input
+                  type="text"
+                  id="filter-examScore"
+                  value={filters.examScore || ""}
+                  onChange={(e) => setFilters({ ...filters, examScore: e.target.value })}
+                  placeholder="e.g., 7.0, 100"
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Budget */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  Budget
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {["Free", "< 3,000", "3,000 - 10,000", "10,000 - 30,000", "> 30,000", "Not sure"].map((budget) => (
+                    <label
+                      key={budget}
+                      className={`flex items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                        filters.budget === budget
+                          ? "border-blue-600 bg-blue-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="filter-budget"
+                        value={budget}
+                        checked={filters.budget === budget}
+                        onChange={(e) => setFilters({ ...filters, budget: e.target.value })}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">{budget}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sort By */}
+              <div>
+                <label htmlFor="filter-sortBy" className="block text-sm font-semibold text-gray-800 mb-2">
+                  Sort By
+                </label>
+                <select
+                  id="filter-sortBy"
+                  value={filters.sortBy || ""}
+                  onChange={(e) => setFilters({ ...filters, sortBy: e.target.value as any })}
+                  className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Default</option>
+                  <option value="deadline">Application Deadline</option>
+                  <option value="country">Country</option>
+                  <option value="category">Category (Realistic/Reach)</option>
+                  <option value="name">University Name</option>
+                </select>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-4 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setFilters({});
+                    setIsFiltersOpen(false);
+                  }}
+                  className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  Clear All
+                </button>
+                <button
+                  onClick={() => setIsFiltersOpen(false)}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  Apply Filters
+                </button>
+              </div>
             </div>
           </div>
         </div>

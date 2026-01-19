@@ -19,7 +19,7 @@ export async function submitForm(formData: FormData) {
   const email = formData.get("email") as string;
 
   // Validate required fields
-  if (!admissionType || !countries.length || !programs.length || !programLanguage || !grades || !languageExam || !budget || !email) {
+  if (!admissionType || !countries.length || !programs.length || !programLanguage || !email) {
     return { error: "All required fields must be filled" };
   }
 
@@ -34,10 +34,10 @@ export async function submitForm(formData: FormData) {
     countries: countries as UserInput["countries"],
     programs: programs as UserInput["programs"],
     programLanguage: programLanguage as UserInput["programLanguage"],
-    grades,
-    languageExam,
+    grades: grades || "",
+    languageExam: (languageExam as LanguageExam) || "None",
     examScore: examScore || undefined,
-    budget,
+    budget: (budget as Budget) || "Not sure",
     email: email.toLowerCase(),
   };
 

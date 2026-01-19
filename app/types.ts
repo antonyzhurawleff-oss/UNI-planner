@@ -4,7 +4,7 @@ export type Country = "Germany" | "Netherlands" | "Italy" | "France" | "UK" | "A
 
 export type LanguageExam = "IELTS" | "TOEFL" | "None";
 
-export type Budget = "Free" | "< 3,000" | "3,000 - 10,000" | "10,000 - 30,000" | "> 30,000";
+export type Budget = "Free" | "< 3,000" | "3,000 - 10,000" | "10,000 - 30,000" | "> 30,000" | "Not sure";
 
 export type ProgramField = 
   | "Business & Management"
@@ -27,10 +27,10 @@ export interface UserInput {
   countries: Country[];
   programs: ProgramField[];
   programLanguage: ProgramLanguage;
-  grades: string;
-  languageExam: LanguageExam;
+  grades?: string;
+  languageExam?: LanguageExam;
   examScore?: string;
-  budget: Budget;
+  budget?: Budget;
   email: string;
 }
 
