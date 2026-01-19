@@ -99,27 +99,43 @@ export async function searchUniversityImage(
   // Try multiple search queries to find the best image
   // Order matters - more specific queries first
   // For Vienna University of Economics and Business, try specific names
-  const universityVariants = [
-    university,
-    university.replace(/University of Economics and Business/i, "WU"),
-    university.replace(/Vienna University of Economics and Business/i, "WU Vienna"),
-    university.replace(/Vienna University of Economics and Business/i, "Wirtschaftsuniversität Wien"),
-  ].filter((v, i, arr) => arr.indexOf(v) === i); // Remove duplicates
+  const universityVariants: string[] = [university];
+  
+  // Add specific variants for known universities
+  if (university.toLowerCase().includes('vienna') && university.toLowerCase().includes('economics')) {
+    universityVariants.push(
+      "WU Vienna",
+      "Wirtschaftsuniversität Wien",
+      "WU Wien",
+      "Vienna University of Economics",
+      "WU Vienna campus"
+    );
+  }
+  if (university.toLowerCase().includes('university of vienna') && !university.toLowerCase().includes('economics')) {
+    universityVariants.push(
+      "Universität Wien",
+      "University of Vienna campus",
+      "Uni Wien"
+    );
+  }
+  
+  // Remove duplicates
+  const uniqueVariants = [...new Set(universityVariants)];
 
   const queries: string[] = [];
-  for (const variant of universityVariants) {
+  for (const variant of uniqueVariants) {
     queries.push(
-      `${variant} ${country} campus building exterior architecture`,
-      `${variant} ${country} university campus main building`,
-      `${variant} ${country} campus aerial view`,
-      `${variant} ${country} university building`,
-      `${variant} ${country} campus`,
+      `${variant} ${country} campus building exterior`,
+      `${variant} ${country} university campus`,
+      `${variant} ${country} main building`,
       `${variant} campus ${country}`,
+      `${variant} ${country}`,
+      `${variant} university`,
     );
   }
   
   // Add generic queries as fallback
-  queries.push(`${university} ${country}`, `${university} campus`);
+  queries.push(`${university} ${country}`, `${university} campus`, `${university}`);
 
   for (const query of queries) {
     try {
@@ -148,32 +164,25 @@ export async function searchUniversityImage(
                           null;
           
           if (imageUrl && imageUrl.startsWith('http')) {
-            // Prefer images that look like campus/university buildings
-            // Check if URL suggests it's a good image (not a logo, icon, etc.)
             const urlLower = imageUrl.toLowerCase();
-            // Less strict filtering - accept more images
+            // Very permissive filtering - accept almost any image except logos/icons
             if (!urlLower.includes('logo') && 
                 !urlLower.includes('icon') && 
                 !urlLower.includes('avatar') &&
-                !urlLower.includes('favicon')) {
-              // Accept if it's an original image or if URL suggests it's a good image
-              if (image.original || 
-                  urlLower.includes('campus') || 
-                  urlLower.includes('university') || 
-                  urlLower.includes('building') ||
-                  urlLower.includes('college') ||
-                  urlLower.includes('wikipedia') ||
-                  urlLower.includes('wikimedia') ||
-                  urlLower.includes('pexels') ||
-                  urlLower.includes('unsplash')) {
-                console.log(`[SerpAPI] Found image for ${university}: ${imageUrl}`);
-                return imageUrl;
-              }
+                !urlLower.includes('favicon') &&
+                !urlLower.includes('.svg') && // Skip SVG files
+                (urlLower.includes('.jpg') || 
+                 urlLower.includes('.jpeg') || 
+                 urlLower.includes('.png') || 
+                 urlLower.includes('.webp') ||
+                 image.original)) { // Accept if it's marked as original
+              console.log(`[SerpAPI] ✅ Found image for ${university}: ${imageUrl}`);
+              return imageUrl;
             }
           }
         }
         
-        // If no "perfect" match, use the first valid image (less strict)
+        // If no "perfect" match, use the first valid image (very permissive)
         for (const image of images) {
           const imageUrl = image.original || 
                           image.link || 
@@ -184,12 +193,18 @@ export async function searchUniversityImage(
           
           if (imageUrl && imageUrl.startsWith('http')) {
             const urlLower = imageUrl.toLowerCase();
-            // Accept any image that's not clearly a logo/icon
+            // Accept any image that's not clearly a logo/icon and is a real image file
             if (!urlLower.includes('logo') && 
                 !urlLower.includes('icon') && 
                 !urlLower.includes('avatar') &&
-                !urlLower.includes('favicon')) {
-              console.log(`[SerpAPI] Found image for ${university} (fallback): ${imageUrl}`);
+                !urlLower.includes('favicon') &&
+                !urlLower.includes('.svg') &&
+                (urlLower.includes('.jpg') || 
+                 urlLower.includes('.jpeg') || 
+                 urlLower.includes('.png') || 
+                 urlLower.includes('.webp') ||
+                 image.original)) {
+              console.log(`[SerpAPI] ✅ Found image for ${university} (fallback): ${imageUrl}`);
               return imageUrl;
             }
           }
