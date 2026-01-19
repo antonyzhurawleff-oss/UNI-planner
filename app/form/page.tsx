@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { submitForm } from "../actions";
-import { AdmissionType, Country, LanguageExam, Budget, ProgramField, ProgramLanguage } from "../types";
+import { AdmissionType, Country, ProgramField, ProgramLanguage } from "../types";
 import { useLanguage } from "../contexts/LanguageContext";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 
@@ -210,14 +210,6 @@ export default function FormPage() {
               <span className="mr-1">💡</span>
               {t("form.programLanguageDesc")}
             </p>
-          </div>
-
-          {/* Section divider */}
-          <div className="pt-4 pb-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-700 flex items-center">
-              <span className="mr-2">📊</span>
-              {t("form.section.academic")}
-            </h2>
           </div>
 
           {/* Email */}
