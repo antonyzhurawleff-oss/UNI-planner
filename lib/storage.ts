@@ -33,8 +33,9 @@ async function ensureTable() {
         created_at TIMESTAMP DEFAULT NOW()
       )
     `;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating table:", error);
+    // Don't throw - allow fallback to in-memory storage
   }
 }
 
@@ -77,8 +78,13 @@ export async function getSubmissions(): Promise<Submission[]> {
         response: row.response,
         createdAt: row.created_at,
       }));
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error reading from database:", error);
+      // If database error, fall back to in-memory (for serverless) or file system
+      if (IS_SERVERLESS) {
+        console.warn("Falling back to in-memory storage due to database error");
+        return inMemoryStorage;
+      }
       return [];
     }
   }

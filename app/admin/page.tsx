@@ -4,8 +4,13 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  const { getSubmissions } = await import("@/lib/storage");
-  const submissions = (await getSubmissions()) || [];
+  let submissions = [];
+  try {
+    submissions = (await getSubmissions()) || [];
+  } catch (error) {
+    console.error("Error loading submissions:", error);
+    // Continue with empty array if there's an error
+  }
 
   return (
     <div className="min-h-screen py-12 px-4 bg-gray-50">

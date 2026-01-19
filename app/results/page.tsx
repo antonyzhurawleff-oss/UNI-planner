@@ -2,6 +2,8 @@ import { getSubmission } from "../actions";
 import { notFound } from "next/navigation";
 import ResultsClient from "./ResultsClient";
 
+export const dynamic = "force-dynamic";
+
 interface ResultsPageProps {
   searchParams: { id?: string };
 }
