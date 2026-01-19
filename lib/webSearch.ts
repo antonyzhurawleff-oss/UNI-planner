@@ -90,21 +90,36 @@ export async function searchUniversityImage(
   country: string
 ): Promise<string | null> {
   if (!process.env.SERPAPI_KEY) {
-    console.warn("SERPAPI_KEY not configured, skipping image search");
+    console.warn(`SERPAPI_KEY not configured, skipping image search for ${university}`);
     return null;
   }
 
+  console.log(`[SerpAPI] Starting image search for: ${university} in ${country}`);
+
   // Try multiple search queries to find the best image
   // Order matters - more specific queries first
-  const queries = [
-    `${university} ${country} campus building exterior architecture`,
-    `${university} ${country} university campus main building`,
-    `${university} ${country} campus aerial view`,
-    `${university} ${country} university building`,
-    `${university} ${country} campus`,
-    `${university} campus ${country}`,
-    `${university} ${country}`,
-  ];
+  // For Vienna University of Economics and Business, try specific names
+  const universityVariants = [
+    university,
+    university.replace(/University of Economics and Business/i, "WU"),
+    university.replace(/Vienna University of Economics and Business/i, "WU Vienna"),
+    university.replace(/Vienna University of Economics and Business/i, "Wirtschaftsuniversität Wien"),
+  ].filter((v, i, arr) => arr.indexOf(v) === i); // Remove duplicates
+
+  const queries: string[] = [];
+  for (const variant of universityVariants) {
+    queries.push(
+      `${variant} ${country} campus building exterior architecture`,
+      `${variant} ${country} university campus main building`,
+      `${variant} ${country} campus aerial view`,
+      `${variant} ${country} university building`,
+      `${variant} ${country} campus`,
+      `${variant} campus ${country}`,
+    );
+  }
+  
+  // Add generic queries as fallback
+  queries.push(`${university} ${country}`, `${university} campus`);
 
   for (const query of queries) {
     try {
@@ -136,21 +151,29 @@ export async function searchUniversityImage(
             // Prefer images that look like campus/university buildings
             // Check if URL suggests it's a good image (not a logo, icon, etc.)
             const urlLower = imageUrl.toLowerCase();
+            // Less strict filtering - accept more images
             if (!urlLower.includes('logo') && 
                 !urlLower.includes('icon') && 
                 !urlLower.includes('avatar') &&
-                (urlLower.includes('campus') || 
-                 urlLower.includes('university') || 
-                 urlLower.includes('building') ||
-                 urlLower.includes('college') ||
-                 image.original)) { // If it's an original, it's likely good quality
-              console.log(`Found image for ${university}: ${imageUrl}`);
-              return imageUrl;
+                !urlLower.includes('favicon')) {
+              // Accept if it's an original image or if URL suggests it's a good image
+              if (image.original || 
+                  urlLower.includes('campus') || 
+                  urlLower.includes('university') || 
+                  urlLower.includes('building') ||
+                  urlLower.includes('college') ||
+                  urlLower.includes('wikipedia') ||
+                  urlLower.includes('wikimedia') ||
+                  urlLower.includes('pexels') ||
+                  urlLower.includes('unsplash')) {
+                console.log(`[SerpAPI] Found image for ${university}: ${imageUrl}`);
+                return imageUrl;
+              }
             }
           }
         }
         
-        // If no "perfect" match, use the first valid image
+        // If no "perfect" match, use the first valid image (less strict)
         for (const image of images) {
           const imageUrl = image.original || 
                           image.link || 
@@ -160,8 +183,15 @@ export async function searchUniversityImage(
                           null;
           
           if (imageUrl && imageUrl.startsWith('http')) {
-            console.log(`Found image for ${university} (fallback): ${imageUrl}`);
-            return imageUrl;
+            const urlLower = imageUrl.toLowerCase();
+            // Accept any image that's not clearly a logo/icon
+            if (!urlLower.includes('logo') && 
+                !urlLower.includes('icon') && 
+                !urlLower.includes('avatar') &&
+                !urlLower.includes('favicon')) {
+              console.log(`[SerpAPI] Found image for ${university} (fallback): ${imageUrl}`);
+              return imageUrl;
+            }
           }
         }
       }

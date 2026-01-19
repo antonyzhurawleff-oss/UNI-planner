@@ -217,5 +217,7 @@ export function enrichProgramWithUniversityData(program: { university: string; c
     applicationDeadline: universityData.applicationDeadline || (hasValue(program.applicationDeadline) ? program.applicationDeadline : undefined),
     semesterStartDate: universityData.semesterStartDate || (hasValue(program.semesterStartDate) ? program.semesterStartDate : undefined),
     tuitionFee: universityData.tuitionFee || (hasValue(program.tuitionFee) ? program.tuitionFee : undefined),
+    // Preserve imageUrl if it exists (from SerpAPI)
+    imageUrl: program.imageUrl || undefined,
   };
 }

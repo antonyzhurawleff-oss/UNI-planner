@@ -162,17 +162,24 @@ Return ONLY valid JSON, no markdown, no emojis, no additional text.`;
       
       // Always search for university image using SerpAPI to ensure we have the best image
       try {
-        console.log(`Searching for image for ${enriched.university} in ${enriched.country}`);
+        console.log(`[Image Search] Starting search for ${enriched.university} in ${enriched.country}`);
         const imageUrl = await searchUniversityImage(enriched.university, enriched.country);
         if (imageUrl) {
           enriched.imageUrl = imageUrl;
-          console.log(`Successfully found image for ${enriched.university}: ${imageUrl}`);
+          console.log(`[Image Search] ✅ Successfully found and saved image for ${enriched.university}: ${imageUrl}`);
         } else {
-          console.warn(`No image found for ${enriched.university} in ${enriched.country}`);
+          console.warn(`[Image Search] ⚠️ No image found for ${enriched.university} in ${enriched.country}`);
         }
-      } catch (error) {
-        console.error(`Failed to search image for ${enriched.university}:`, error);
+      } catch (error: any) {
+        console.error(`[Image Search] ❌ Failed to search image for ${enriched.university}:`, error?.message || error);
         // Continue without image if search fails
+      }
+      
+      // Log final program data to verify imageUrl is present
+      if (enriched.imageUrl) {
+        console.log(`[Image Search] ✅ Final program data for ${enriched.university} includes imageUrl: ${enriched.imageUrl}`);
+      } else {
+        console.warn(`[Image Search] ⚠️ Final program data for ${enriched.university} has NO imageUrl`);
       }
       
       // Return enriched program with all fields
