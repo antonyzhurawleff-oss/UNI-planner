@@ -54,7 +54,7 @@ export async function submitForm(formData: FormData) {
       createdAt: new Date().toISOString(),
     };
 
-    saveSubmission(submission);
+    await saveSubmission(submission);
 
     // Return submission ID for client-side redirect
     // Using redirect() here doesn't work when called from client handler
@@ -83,18 +83,18 @@ export async function submitForm(formData: FormData) {
 
 // Helper to get submission by ID (for results page)
 export async function getSubmission(id: string): Promise<Submission | null> {
-  return getSubmissionById(id);
+  return await getSubmissionById(id);
 }
 
 // Helper to get submissions by email (for email-based access)
 export async function getSubmissionsForEmail(email: string): Promise<Submission[]> {
-  return getSubmissionsByEmail(email);
+  return await getSubmissionsByEmail(email);
 }
 
 // Generate plan for a specific program
 export async function generatePlanForProgram(submissionId: string, programIndex: number): Promise<{ success: boolean; plan?: AdmissionPlan; error?: string }> {
   try {
-    const submission = getSubmissionById(submissionId);
+    const submission = await getSubmissionById(submissionId);
     if (!submission) {
       return { success: false, error: "Submission not found" };
     }
@@ -140,7 +140,7 @@ export async function generatePlanForProgram(submissionId: string, programIndex:
     const plan = await generateProgramPlan(program, submission.input);
     
     // Update submission with plan
-    updateSubmissionPlan(submissionId, plan);
+    await updateSubmissionPlan(submissionId, plan);
 
     return { success: true, plan };
   } catch (error: any) {

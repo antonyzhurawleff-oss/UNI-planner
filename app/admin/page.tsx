@@ -3,8 +3,9 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminPage() {
-  const submissions = getSubmissions() || [];
+export default async function AdminPage() {
+  const { getSubmissions } = await import("@/lib/storage");
+  const submissions = (await getSubmissions()) || [];
 
   return (
     <div className="min-h-screen py-12 px-4 bg-gray-50">
