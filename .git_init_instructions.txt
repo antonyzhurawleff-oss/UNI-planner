@@ -1,0 +1,28 @@
+# Инструкция по сохранению проекта в Git
+
+## Шаг 1: Инициализация Git (если еще не сделано)
+git init
+
+## Шаг 2: Проверка статуса
+git status
+
+## Шаг 3: Добавление всех файлов
+git add .
+
+## Шаг 4: Первый коммит
+git commit -m "Initial commit - University Planner MVP"
+
+## Шаг 5: Создайте репозиторий на GitHub
+# 1. Перейдите на https://github.com/new
+# 2. Создайте новый репозиторий (название: admissions-planner-mvp)
+# 3. НЕ добавляйте README, .gitignore или license (они уже есть)
+
+## Шаг 6: Подключите удаленный репозиторий
+# Замените YOUR_USERNAME на ваш GitHub username
+git remote add origin https://github.com/YOUR_USERNAME/admissions-planner-mvp.git
+
+## Шаг 7: Отправьте код на GitHub
+git branch -M main
+git push -u origin main
+
+После этого ваш проект будет сохранен на GitHub!
