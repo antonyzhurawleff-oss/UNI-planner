@@ -23,6 +23,11 @@ export default function ResultsClient({ submission }: ResultsClientProps) {
   
   if (response.programs && Array.isArray(response.programs)) {
     programs = response.programs;
+    // Log programs to verify imageUrl is present
+    console.log(`[ResultsClient] Loaded ${programs.length} programs from submission`);
+    programs.forEach((p, i) => {
+      console.log(`[ResultsClient] Program ${i + 1}: ${p.university} - imageUrl: ${p.imageUrl || 'MISSING'}`);
+    });
   } else if (response.universities && Array.isArray(response.universities)) {
     // Convert old format to new format for backward compatibility
     programs = response.universities.map((uni: any) => ({

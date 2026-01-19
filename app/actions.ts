@@ -45,6 +45,14 @@ export async function submitForm(formData: FormData) {
     // Generate AI response
     const response: AIResponse = await generateAdmissionPlan(input);
 
+    // Log response to verify images are present
+    console.log(`[submitForm] Response generated with ${response.programs?.length || 0} programs`);
+    if (response.programs) {
+      response.programs.forEach((p, i) => {
+        console.log(`[submitForm] Program ${i + 1}: ${p.university} - imageUrl: ${p.imageUrl || 'MISSING'}`);
+      });
+    }
+
     // Save submission
     const submission: Submission = {
       id: randomUUID(),
@@ -54,7 +62,7 @@ export async function submitForm(formData: FormData) {
       createdAt: new Date().toISOString(),
     };
 
-    console.log(`submitForm: Saving submission with ID: ${submission.id}`);
+    console.log(`[submitForm] Saving submission with ID: ${submission.id}`);
     try {
       await saveSubmission(submission);
       console.log(`submitForm: Successfully saved submission ID: ${submission.id}`);
