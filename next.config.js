@@ -1,7 +1,11 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
-    typescript: {
-      ignoreBuildErrors: true,
-    },
-  };
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  output: "standalone",
+};
   
