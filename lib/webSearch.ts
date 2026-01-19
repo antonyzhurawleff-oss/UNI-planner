@@ -94,49 +94,82 @@ export async function searchUniversityImage(
     return null;
   }
 
-  try {
-    const query = `${university} ${country} campus building exterior`;
-    
-    console.log(`Searching for image: ${query}`);
-    
-    const results = await getJson({
-      engine: "google_images",
-      q: query,
-      api_key: process.env.SERPAPI_KEY,
-      num: 5, // Get top 5 images
-    });
+  // Try multiple search queries to find the best image
+  const queries = [
+    `${university} ${country} campus building exterior`,
+    `${university} ${country} university campus`,
+    `${university} ${country} main building`,
+    `${university} campus`,
+  ];
 
-    console.log("SerpAPI image search results:", JSON.stringify(results, null, 2));
-
-    // Extract first image URL from results
-    // SerpAPI returns images in different formats depending on the engine
-    const images = results.images_results || results.images || [];
-    
-    if (images.length > 0) {
-      const firstImage = images[0];
-      // Try different possible fields for image URL
-      const imageUrl = firstImage.original || 
-                      firstImage.link || 
-                      firstImage.url ||
-                      firstImage.source ||
-                      (firstImage.thumbnail && firstImage.thumbnail.replace(/\/thumb\//, '/')) ||
-                      null;
+  for (const query of queries) {
+    try {
+      console.log(`Searching for image: ${query}`);
       
-      if (imageUrl) {
-        console.log(`Found image for ${university}: ${imageUrl}`);
-        return imageUrl;
+      const results = await getJson({
+        engine: "google_images",
+        q: query,
+        api_key: process.env.SERPAPI_KEY,
+        num: 10, // Get top 10 images to find the best one
+        safe: "active",
+      });
+
+      // Extract image URLs from results
+      const images = results.images_results || results.images || [];
+      
+      if (images.length > 0) {
+        // Try to find a high-quality image (prefer original size)
+        for (const image of images) {
+          // Try different possible fields for image URL
+          const imageUrl = image.original || 
+                          image.link || 
+                          image.url ||
+                          image.source ||
+                          (image.thumbnail && image.thumbnail.replace(/\/thumb\//, '/')) ||
+                          null;
+          
+          if (imageUrl && imageUrl.startsWith('http')) {
+            // Prefer images that look like campus/university buildings
+            // Check if URL suggests it's a good image (not a logo, icon, etc.)
+            const urlLower = imageUrl.toLowerCase();
+            if (!urlLower.includes('logo') && 
+                !urlLower.includes('icon') && 
+                !urlLower.includes('avatar') &&
+                (urlLower.includes('campus') || 
+                 urlLower.includes('university') || 
+                 urlLower.includes('building') ||
+                 urlLower.includes('college') ||
+                 image.original)) { // If it's an original, it's likely good quality
+              console.log(`Found image for ${university}: ${imageUrl}`);
+              return imageUrl;
+            }
+          }
+        }
+        
+        // If no "perfect" match, use the first valid image
+        for (const image of images) {
+          const imageUrl = image.original || 
+                          image.link || 
+                          image.url ||
+                          image.source ||
+                          (image.thumbnail && image.thumbnail.replace(/\/thumb\//, '/')) ||
+                          null;
+          
+          if (imageUrl && imageUrl.startsWith('http')) {
+            console.log(`Found image for ${university} (fallback): ${imageUrl}`);
+            return imageUrl;
+          }
+        }
       }
+    } catch (error: any) {
+      console.error(`SerpAPI image search error for ${university} with query "${query}":`, error.message);
+      // Continue to next query
+      continue;
     }
-    
-    console.warn(`No images found for ${university}`);
-    return null;
-  } catch (error: any) {
-    console.error(`SerpAPI image search error for ${university}:`, error.message);
-    if (error.response) {
-      console.error("Error response:", error.response);
-    }
-    return null;
   }
+  
+  console.warn(`No images found for ${university} after trying ${queries.length} queries`);
+  return null;
 }
 
 /**

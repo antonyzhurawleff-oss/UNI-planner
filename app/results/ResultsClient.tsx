@@ -598,7 +598,23 @@ export default function ResultsClient({ submission }: ResultsClientProps) {
                 <h3 className="text-3xl font-bold text-gray-900 mb-2">{selectedProgram.name}</h3>
                 <p className="text-2xl font-semibold text-blue-600 mb-4">{selectedProgram.university}</p>
                 {selectedProgram.description && (
-                  <p className="text-gray-700 leading-relaxed mb-4">{selectedProgram.description}</p>
+                  <div className="mb-4">
+                    {/* University Image in Description */}
+                    {selectedProgram.imageUrl && (
+                      <div className="mb-4 rounded-lg overflow-hidden shadow-md">
+                        <img
+                          src={selectedProgram.imageUrl}
+                          alt={`${selectedProgram.university} campus`}
+                          className="w-full h-64 object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    <p className="text-gray-700 leading-relaxed">{selectedProgram.description}</p>
+                  </div>
                 )}
                 {selectedProgram.programStructure && (
                   <div className="mt-4 p-4 bg-gray-50 rounded-lg border-l-4 border-blue-500">
