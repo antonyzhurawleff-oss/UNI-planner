@@ -15,11 +15,16 @@ export default async function ResultsPage({ searchParams }: ResultsPageProps) {
     notFound();
   }
 
-  const submission = await getSubmission(id);
+  try {
+    const submission = await getSubmission(id);
 
-  if (!submission) {
+    if (!submission) {
+      notFound();
+    }
+
+    return <ResultsClient submission={submission} />;
+  } catch (error) {
+    console.error("Error loading submission:", error);
     notFound();
   }
-
-  return <ResultsClient submission={submission} />;
 }

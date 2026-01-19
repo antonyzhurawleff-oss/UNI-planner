@@ -13,9 +13,15 @@ const IS_SERVERLESS = process.env.VERCEL === "1" || process.env.AWS_LAMBDA_FUNCT
 function getDatabase() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
+    console.warn("DATABASE_URL not found, using fallback storage");
     return null;
   }
-  return neon(databaseUrl);
+  try {
+    return neon(databaseUrl);
+  } catch (error) {
+    console.error("Error creating database connection:", error);
+    return null;
+  }
 }
 
 // Initialize database table (run once)
@@ -175,15 +181,31 @@ export async function getSubmissionById(id: string): Promise<Submission | null> 
         response: row.response,
         createdAt: row.created_at,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error reading from database:", error);
-      return null;
+      // Fall back to in-memory or file system
+      if (IS_SERVERLESS) {
+        const submission = inMemoryStorage.find((s) => s.id === id);
+        return submission || null;
+      }
+      // Try file system
+      try {
+        const submissions = await getSubmissions();
+        return submissions.find((s) => s.id === id) || null;
+      } catch {
+        return null;
+      }
     }
   }
   
   // Fallback to other methods
-  const submissions = await getSubmissions();
-  return submissions.find((s) => s.id === id) || null;
+  try {
+    const submissions = await getSubmissions();
+    return submissions.find((s) => s.id === id) || null;
+  } catch (error) {
+    console.error("Error in getSubmissionById fallback:", error);
+    return null;
+  }
 }
 
 // Get submissions by email
